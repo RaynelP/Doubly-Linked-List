@@ -8,7 +8,14 @@ using namespace std;
 
 typedef unsigned long Nat;
 
-
+struct Nodo{
+    Nodo(int dato) : _dato(dato), _adelante(nullptr), _atras(nullptr) {}
+    Nodo& operator=(const Nodo& aCopiar) {
+    }
+    Nodo* _adelante;
+    Nodo* _atras;
+    int _dato;
+};
 
 class Lista {
 public:
@@ -89,28 +96,41 @@ public:
 
     // -------------------------------------estructura interna-------------------------------------------//
 private:
-    struct Nodo{
-        Nodo* adelante_;
-        Nodo* atras_;
-        int dato_;
-    };
-    bool esRama(Nodo* n, bool &queramaes);
-    void DestructorRecursivo(Nodo* n);
-    Nodo* ramaDelantera_;
-    Nodo* ramatrasera_;
-    int longitud_;
+
+    void destructorRecursivo(Nodo* n);
+    Nodo* copiadorRecursivo(Nodo* nodoAcopiar, Nodo** ramaTrasera);
+    Nodo* _ramaDelantera;
+    Nodo* _ramatrasera;
+    int _longitud;
 };
 
-bool Lista::esRama(Nodo *n, bool &queramaes) {
-    bool ramaTrasera = (n->atras_ == nullptr && n->adelante_ != nullptr);
-    bool ramaDelantera = (n->atras_ != nullptr && n->adelante_ == nullptr);
-    if (ramaDelantera){
-        queramaes = true;
-    }else{
-        queramaes = false;
+void Lista::destructorRecursivo(Nodo *n) {
+    if(n != nullptr){
+        destructorRecursivo(n->_atras);
+        delete n;
     }
-    return ramaDelantera || ramaTrasera;
+    _ramaDelantera = nullptr;
+    _ramatrasera = nullptr;
 }
+
+Nodo* Lista::copiadorRecursivo(Nodo *nodoACopiar, Nodo** ptrRamaTrasera) {
+
+    if(nodoACopiar == nullptr){
+        return nullptr;
+    }else{
+        Nodo* nodoNuevo = new Nodo(nodoACopiar->_dato);
+        Nodo* nodoAnterior = copiadorRecursivo(nodoACopiar->_atras, ptrRamaTrasera);
+        if(nodoAnterior != nullptr){
+            nodoAnterior->_adelante = nodoNuevo;
+            nodoNuevo->_atras = nodoAnterior;
+        } else {
+            *ptrRamaTrasera = nodoNuevo;
+        }
+        return nodoNuevo;
+    }
+
+}
+
 #include "Lista.hpp"
 
 #endif

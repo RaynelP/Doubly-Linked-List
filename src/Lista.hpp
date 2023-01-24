@@ -1,5 +1,6 @@
 #include "Lista.h"
-Lista::Lista() : longitud_(0), ramaDelantera_(nullptr), ramatrasera_(nullptr){}
+
+Lista::Lista() : _longitud(0), _ramaDelantera(nullptr), _ramatrasera(nullptr){}
 
 Lista::Lista(const Lista& l) : Lista(){
     //Inicializa una lista vacía y luego utiliza operator= para no duplicar el código de la copia de una lista.
@@ -7,142 +8,90 @@ Lista::Lista(const Lista& l) : Lista(){
 }
 
 Lista::~Lista(){
-    Nodo* p = ramaDelantera_;
-    DestructorRecursivo(p);
-}
-void Lista::DestructorRecursivo(Nodo *n) {
-    if(n != nullptr){
-        DestructorRecursivo(n->atras_);
-        delete n;
-    }
-    ramaDelantera_ = nullptr;
-    ramatrasera_ = nullptr;
+    Nodo* p = _ramaDelantera;
+    destructorRecursivo(p);
 }
 
 Lista& Lista::operator=(const Lista& aCopiar) {
-    DestructorRecursivo(ramaDelantera_);
-	Nodo* p = aCopiar.ramaDelantera_;
-    if(aCopiar.longitud() == 0){
-        ramaDelantera_ = nullptr;
-        ramatrasera_ = nullptr;
-        longitud_ = 0;
-        return *this;
-    }else{
-        Nodo* delantero;
-        while (p != nullptr){
-            if (p == aCopiar.ramaDelantera_){
-                Nodo* q = new Nodo();
-                q->dato_ = p->dato_;
-                ramaDelantera_ = q;
-                ramatrasera_ = q;
-                delantero = ramaDelantera_;
-            }else{
-                Nodo* q = new Nodo();
-                q->dato_ = p->dato_;
-                q->adelante_ = delantero;
-                delantero->atras_ = q;
-                ramatrasera_ = q;
-                delantero = q;
-            }
-            p = p->atras_;
-        }
-        longitud_ = aCopiar.longitud();
-        return *this;
-    }
+     Nodo** ptrRamaTrasera = &_ramatrasera;
+     _ramaDelantera = copiadorRecursivo(aCopiar._ramaDelantera, ptrRamaTrasera);
+     _longitud = aCopiar._longitud;
+     return *this;
 }
 
 void Lista::agregarAdelante(const int& elem) {
-    if (longitud_ == 0){
-        Nodo* nodo = new Nodo();
-        nodo->dato_ = elem;
-        ramatrasera_ = nodo;
-        ramaDelantera_ = nodo;
-        longitud_++;
+    Nodo* newNodo = new Nodo(elem);
+    if (_longitud == 0){
+        _ramatrasera = newNodo;
     }else{
-        Nodo* nodo = new Nodo();
-        nodo->dato_ = elem;
-        nodo->atras_ = ramaDelantera_;
-        ramaDelantera_->adelante_ = nodo;
-        ramaDelantera_ = nodo;
-        longitud_++;
+        newNodo->_atras = _ramaDelantera;
+        _ramaDelantera->_adelante = newNodo;
     }
+    _ramaDelantera = newNodo;
+    _longitud++;
 }
 
 void Lista::agregarAtras(const int& elem) {
-    if (longitud_ == 0){
-        Nodo* nodo = new Nodo();
-        nodo->dato_ = elem;
-        ramatrasera_ = nodo;
-        ramaDelantera_ = nodo;
-        longitud_++;
-    }else{
-        Nodo* nodo = new Nodo();
-        nodo->dato_ = elem;
-        nodo->adelante_ = ramatrasera_;
-        ramatrasera_->atras_ = nodo;
-        ramatrasera_ = nodo;
-        longitud_++;
+    Nodo *nodo = new Nodo(elem);
+    if (_longitud == 0) {
+        _ramaDelantera = nodo;
+    } else {
+        nodo->_adelante = _ramatrasera;
+        _ramatrasera->_atras = nodo;
     }
+    _ramatrasera = nodo;
+    _longitud++;
 }
 
 void Lista::eliminar(Nat i){
-    Nodo* p = ramaDelantera_; //Buscar el nodo a eliminar
-    int j = 0;
-    while (j != i){
-        p = p->atras_;
-        j++;
+
+    Nodo* ptrNodo = _ramaDelantera;
+    for (int j = 0; j < i; ++j)
+        ptrNodo = ptrNodo->_atras;
+
+    Nodo* anterior = ptrNodo->_atras;
+    Nodo* proximo = ptrNodo->_adelante;
+
+    if(anterior != nullptr) {
+        anterior->_adelante = proximo;
     }
-    if (longitud_ == 1){      //si es el unico nodo
-        delete p;
-        ramaDelantera_ = nullptr;
-        ramatrasera_ = nullptr;
-        longitud_--;
-    }else{
-        bool ramaDelantera;
-        if(esRama(p, ramaDelantera)){    //si es una de las ramas
-            if (ramaDelantera){
-                ramaDelantera_ = p->atras_;
-                ramaDelantera_->adelante_ = nullptr;
-                delete p;
-                longitud_--;
-            }else{
-                ramatrasera_ = p->adelante_;
-                ramatrasera_->atras_ = nullptr;
-                delete p;
-                longitud_--;
-            }
-        }else {
-            (p->adelante_)->atras_ = p->atras_;
-            (p->atras_)->adelante_ = p->adelante_;
-            delete p;
-            longitud_--;
-        }
+    if(proximo != nullptr){
+        proximo->_atras = anterior;
     }
+
+    if(i == 0) _ramaDelantera =  anterior;
+    if(i == _longitud - 1) _ramatrasera =  proximo;
+
+    _longitud--;
+    delete(ptrNodo);
 }
 
 int Lista::longitud() const{
-    return longitud_;
+    return _longitud;
 }
 
 const int& Lista::iesimo(Nat i) const{
-    Nodo* p = ramaDelantera_;
-    int j = 0;
-    while (j != i){
-        p = p->atras_;
-        j++;
-    }
-    return p->dato_;
+    Nodo* ptrNodo = _ramaDelantera;
+    for (int j = 0; j < i; ++j)
+        ptrNodo = ptrNodo->_atras;
+    return ptrNodo->_dato;
 }
 
 int& Lista::iesimo(Nat i){
-    Nodo* p = ramaDelantera_;
-    int j = 0;
-    while (j != i){
-        p = p->atras_;
-        j++;
-    }
-    return p->dato_;
+    Nodo* ptrNodo = _ramaDelantera;
+    for (int j = 0; j < i; ++j)
+        ptrNodo = ptrNodo->_atras;
+
+    return ptrNodo->_dato;
 }
 
 void Lista::mostrar(ostream& o) {
+    Nodo* ptrNodo = _ramaDelantera;
+    o << "[";
+    for (int j = 0; j < _longitud; ++j){
+        o << ptrNodo->_dato;
+        if(j != _longitud - 1) o << ", ";
+        ptrNodo = ptrNodo->_atras;
+    }
+    o << "]" << endl;
 }
